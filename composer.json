@@ -1,9 +1,9 @@
 {
-    "name": "johnnyfreeman/coseva",
+    "name": "deneb-air/coseva",
     "type": "library",
     "description": "A friendly, object-oriented library for parsing and filtering CSV files with PHP.",
     "keywords": ["csv","parse"],
-    "homepage": "https://github.com/johnnyfreeman/coseva",
+    "homepage": "https://github.com/deneb-air/coseva",
     "license": "MIT",
     "authors": [
         {
@@ -16,6 +16,12 @@
             "name": "Jan-Marten de Boer",
             "email": "github@johmanx.com",
             "homepage": "https://github.com/johmanx10",
+            "role": "Developer"
+        }
+        {
+            "name": "Vitaliy Koronos",
+            "email": "deneb.air@gmail.com",
+            "homepage": "https://github.com/deneb-air",
             "role": "Developer"
         }
     ],
