@@ -40,6 +40,12 @@ class CSV implements IteratorAggregate, ArrayAccess
     protected $_filters = array();
 
     /**
+     * Holds field names
+     * @var array $_fields
+     */
+    protected $_fields = array();
+
+    /**
      * Holds the CSV file pointer.
      *
      * @var SplFileObject $_file the active CSV file
@@ -120,7 +126,9 @@ class CSV implements IteratorAggregate, ArrayAccess
             // Explicitely cast this as a boolean to ensure proper bevahior.
             'use_include_path' => (bool) $use_include_path,
             // set comma as default delimiter
-            'delimiter' => ','
+            'delimiter' => ',',
+            // file without header, by default
+            'header' => false
         );
 
         // Try to automatically determine the most optimal settings for this file.
@@ -337,10 +345,15 @@ class CSV implements IteratorAggregate, ArrayAccess
                 $this->setDelimiter($this->_fileConfig['delimiter']);
             }
 
+            // Collect fields from header.
+            $rowOffset = $this->_parseHeader($rowOffset);
+
             $this->_rows = array();
 
             // Fetch the rows.
             foreach (new LimitIterator($this->_file, $rowOffset) as $key => $row) {
+                // Apply field names.
+                $row = $this->_fillFields($row);
                 // Apply any filters.
                 $this->_rows[$key] = $this->_applyFilters($row);
 
@@ -394,6 +407,47 @@ class CSV implements IteratorAggregate, ArrayAccess
         return $this;
     }
 
+    /**
+     * Fetch field names from header.
+     *
+     * @param  integer $rowOffset Determines which row the parser will start on.
+     * @return integer $rowOffset
+     */
+    protected function _parseHeader($rowOffset) {
+        if ($this->_fileConfig['header'] && empty($this->_fields)) {
+            // Go to first row
+            $this->_file->seek($rowOffset);
+            // Fetch fields
+            $this->setFields($this->_file->fgetcsv());
+
+            // Ignore this row for parser
+            $rowOffset++;
+        }
+
+        return $rowOffset;
+    }
+
+    /**
+     * Update row keys.
+     *
+     * @param  array $row
+     * @return array $row
+     */
+    protected function _fillFields(array $row) {
+        if (!empty($this->_fields)) {
+            foreach ($row as $key => $value) {
+                if (isset($this->_fields[$key])) {
+                    // We have field name of this column.
+                    // Use it as key.
+                    $field = $this->_fields[$key];
+                    $row[$field] = $value;
+                    unset($row[$key]);
+                }
+            }
+        }
+
+        return $row;
+    }
     /**
      * Whether or not to use garbage collection after parsing.
      *
@@ -472,6 +526,42 @@ class CSV implements IteratorAggregate, ArrayAccess
         // just set the dimiter immediately
         if ($this->_file instanceof SplFileObject) {
             $this->_file->setCsvControl($this->_fileConfig['delimiter']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use first line as field names
+     *
+     * @param  boolean $header
+     * @return object $this CSV instance
+     */
+    public function setHeader($header = true)
+    {
+        $header = (boolean)$header;
+        $this->_fileConfig['header'] = $header;
+
+        return $this;
+    }
+
+    /**
+     * Set field names for csv columns.
+     *
+     * @param array $fields
+     * @return object $this CSV instance
+     */
+    public function setFields(array $fields) {
+        $this->_fields = array_filter(
+            array_map('trim', $fields),
+            function($field) { return !empty($field); }
+        );
+
+        if (isset($this->_rows)) {
+            $this->_rows = array_map(
+                array($this, '_fillFields'),
+                $this->_rows
+            );
         }
 
         return $this;
