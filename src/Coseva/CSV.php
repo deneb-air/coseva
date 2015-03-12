@@ -16,12 +16,14 @@ use \SplFileObject,
     \LimitIterator,
     \IteratorAggregate,
     \ArrayIterator,
-    \InvalidArgumentException;
+    \ArrayAccess,
+    \InvalidArgumentException,
+    \LogicException;
 
 /**
  * CSV.
  */
-class CSV implements IteratorAggregate
+class CSV implements IteratorAggregate, ArrayAccess
 {
     /**
      * Storage for parsed CSV rows.
@@ -486,6 +488,74 @@ class CSV implements IteratorAggregate
     {
         if (!isset($this->_rows)) $this->parse();
         return new ArrayIterator($this->_rows);
+    }
+
+    /**
+     * Whether or not an offset exists.
+     *
+     * Required for implementing ArrayAccess
+     *
+     * @param mixed $offset An offset to check for.
+     * @return boolean
+     */
+    public function offsetExists($offset)
+    {
+        if (!isset($this->_rows)) $this->parse();
+        return array_key_exists($offset, $this->_rows);
+    }
+
+    /**
+     * Returns the value at specified offset.
+     * Return-by-value always. Indirect modification is disable.
+     *
+     * Required for implementing ArrayAccess
+     *
+     * @param mixed $offset The offset to retrieve.
+     * @throws InvalidArgumentException When the given offset does not exist
+     * @return mixed
+     */
+    public function offsetGet($offset)
+    {
+        if (!$this->offsetExists($offset)) {
+            throw new InvalidArgumentException(
+                'Undefined key: ' . var_export($offset, true) . '.'
+            );
+        }
+
+        return $this->_rows[$offset];
+    }
+
+    /**
+     * Assigns a value to the specified offset.
+     * Disable.
+     *
+     * Required for implementing ArrayAccess
+     *
+     * @param mixed $offset The offset to assign the value to.
+     * @param mixed $value  The value to set.
+     * @throws BadMethodCallException Always
+     */
+    public function offsetSet($offset, $value)
+    {
+        throw new LogicException(
+            __CLASS__.' is read-only.'
+        );
+    }
+
+    /**
+     * Unsets an offset.
+     * Disable.
+     *
+     * Required for implementing ArrayAccess
+     *
+     * @param mixed $offset The offset to unset.
+     * @throws BadMethodCallException Always
+     */
+    public function offsetUnset($offset)
+    {
+        throw new LogicException(
+            __CLASS__.' is read-only.'
+        );
     }
 
     /**
