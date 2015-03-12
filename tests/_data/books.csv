@@ -1,0 +1,7 @@
+id;author; title;;description
+1;Bjarne Stroustrup;The C++ Programming Language;2013;The classic introduction to C++ by its creator.
+2;Scott Meyers;Overview of the New C++;2014;These are the presentation materials (slides and some lecture notes) of a three-day training course offered by Scott Meyers, who's a highly respected author on C++. Even though the list of items is short, the quality is high.
+;;;;
+4;Nicolai Josuttis;C++ Standard Library Tutorial and Reference;2012;The introduction and reference for the C++ Standard Library.
+;;;;
+5;Bjarne Stroustrup;The Design and Evolution of C++;;If you want to know why the language is the way it is, this book is where you find answers
