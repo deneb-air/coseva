@@ -237,7 +237,7 @@ class CSV implements IteratorAggregate, ArrayAccess
         $column = array_shift($args);
 
         // Check if we actually have a column or a callable.
-        if (is_numeric($column)) {
+        if (is_numeric($column) || is_string($column)) {
             $callable = array_shift($args);
         } else {
             $callable = $column;
@@ -249,7 +249,7 @@ class CSV implements IteratorAggregate, ArrayAccess
             'The $callable parameter must be callable.'
         );
 
-        if (isset($column) && !is_numeric($column)) throw new InvalidArgumentException(
+        if (isset($column) && !(is_numeric($column) || is_string($column))) throw new InvalidArgumentException(
             'No proper column index provided. Expected a numeric, while given '
             . var_export($column, true)
         );
@@ -259,7 +259,7 @@ class CSV implements IteratorAggregate, ArrayAccess
         $this->_filters[] = array(
             'callable' => $callable,
             // Explicitely cast the column as an integer.
-            'column' => isset($column) ? (int) $column : null,
+            'column' => isset($column) ? $column : null,
             'args' => $args
         );
 
@@ -495,13 +495,16 @@ class CSV implements IteratorAggregate, ArrayAccess
                         )
                     );
                 } else {
-                    $row[$column] = call_user_func_array(
-                        $callable,
-                        array_merge(
-                            array(&$row[$column]),
-                            $arguments
-                        )
-                    );
+                    // Apply filter only to existing columns.
+                    if (array_key_exists($column, $row)) {
+                        $row[$column] = call_user_func_array(
+                            $callable,
+                            array_merge(
+                                array(&$row[$column]),
+                                $arguments
+                            )
+                        );
+                    }
                 }
             }
 
