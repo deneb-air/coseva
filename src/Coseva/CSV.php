@@ -434,20 +434,23 @@ class CSV implements IteratorAggregate, ArrayAccess
      * @return array $row
      */
     protected function _fillFields(array $row) {
-        if (!empty($this->_fields)) {
-            foreach ($row as $key => $value) {
-                if (isset($this->_fields[$key])) {
-                    // We have field name of this column.
-                    // Use it as key.
-                    $field = $this->_fields[$key];
-                    $row[$field] = $value;
-                    unset($row[$key]);
-                }
+        if (empty($this->_fields)) {
+            return $row;
+        }
+        $res = [];
+        foreach ($row as $key => $value) {
+            if (isset($this->_fields[$key])) {
+                // We have field name of this column.
+                // Use it as key.
+                $res[$this->_fields[$key]] = $value;
+            } else {
+                $res[$key] = $value;
             }
         }
-
-        return $row;
+        unset($row);
+        return $res;
     }
+
     /**
      * Whether or not to use garbage collection after parsing.
      *
