@@ -339,7 +339,7 @@ class CSV implements IteratorAggregate, ArrayAccess
                 );
 
                 // Set the flag to parse CSV.
-                $this->_file->setFlags(SplFileObject::READ_CSV);
+                $this->_file->setFlags(SplFileObject::READ_CSV | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
 
                 // Set the delimiter
                 $this->setDelimiter($this->_fileConfig['delimiter']);
@@ -347,11 +347,14 @@ class CSV implements IteratorAggregate, ArrayAccess
 
             // Collect fields from header.
             $rowOffset = $this->_parseHeader($rowOffset);
-
             $this->_rows = array();
 
             // Fetch the rows.
             foreach (new LimitIterator($this->_file, $rowOffset) as $key => $row) {
+                // Ignore empty lines
+                if (empty($row)) {
+                    continue;
+                }
                 // Apply field names.
                 $row = $this->_fillFields($row);
                 // Apply any filters.
