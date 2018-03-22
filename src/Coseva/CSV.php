@@ -18,12 +18,13 @@ use \SplFileObject,
     \ArrayIterator,
     \ArrayAccess,
     \InvalidArgumentException,
-    \LogicException;
+    \LogicException,
+    \Countable;
 
 /**
  * CSV.
  */
-class CSV implements IteratorAggregate, ArrayAccess
+class CSV implements IteratorAggregate, ArrayAccess, Countable
 {
     /**
      * Storage for parsed CSV rows.
@@ -31,6 +32,13 @@ class CSV implements IteratorAggregate, ArrayAccess
      * @var array $_rows the rows found in the CSV resource
      */
     protected $_rows;
+
+    /**
+     * Holds count rows in csv file. Ignore heading.
+     *
+     * @var int $_count
+     */
+    protected $_count;
 
     /**
      * Storage for filter callbacks to be executed during the parsing stage.
@@ -348,6 +356,7 @@ class CSV implements IteratorAggregate, ArrayAccess
             // Collect fields from header.
             $rowOffset = $this->_parseHeader($rowOffset);
             $this->_rows = array();
+            $this->_count = 0;
 
             // Fetch the rows.
             foreach (new LimitIterator($this->_file, $rowOffset) as $key => $row) {
@@ -365,6 +374,9 @@ class CSV implements IteratorAggregate, ArrayAccess
                     $this->_flushEmptyRow($row, $key, true);
                 }
             }
+
+            // Store count of rows read
+            $this->_count = count($this->_rows);
 
             // Flush the filters.
             $this->flushFilters();
@@ -655,6 +667,19 @@ class CSV implements IteratorAggregate, ArrayAccess
         throw new LogicException(
             __CLASS__.' is read-only.'
         );
+    }
+
+    /**
+     * Return count rows reading from csv file.
+     * Ignore heading.
+     *
+     * Required for implementing Countable interface.
+     *
+     * @return int
+     */
+    public function count()
+    {
+        return $this->_count;
     }
 
     /**
